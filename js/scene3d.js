@@ -585,13 +585,16 @@ export class Scene3D {
     // street lamp
     const poleMat = new THREE.MeshStandardMaterial({ color: 0x37474f, metalness: 0.5, roughness: 0.4 });
     const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.08, 4.4, 8), poleMat);
-    pole.position.set(-4, 2.2, 7.4);
+    pole.position.set(-4, 2.2, 6.5);   // on the pavement, not the road
     this.scene.add(pole);
+    const arm = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 0.9), poleMat);
+    arm.position.set(-4, 4.4, 6.9);
+    this.scene.add(arm);
     const headMat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffb36b, emissiveIntensity: 0 });
     this.lampMats.push(headMat);
     this.streetHeadMat = headMat;
     const head = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.12, 0.25), headMat);
-    head.position.set(-4, 4.4, 7.2);
+    head.position.set(-4, 4.32, 7.3);
     this.scene.add(head);
   }
 

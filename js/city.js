@@ -198,19 +198,13 @@ export function buildCity(scene, { envMap = null, lowQuality = false } = {}) {
   const poleMat = std({ color: 0x37474f, metalness: 0.5, roughness: 0.4, envMap });
   const lampHeadMat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffb36b, emissiveIntensity: 0 });
   glowMats.push({ mat: lampHeadMat, kind: 'emissive', max: 2.2 });
-  for (let x = -60; x <= 60; x += 15) {
-    for (const [z, dir] of [[7.6, 1], [14.0, -1]]) {
-      if (Math.abs(x + 4) < 3 && z < 8) continue; // existing lamp in front of the warung
-      add(new THREE.CylinderGeometry(0.06, 0.08, 6, 8), poleMat, x, 3, z);
-      add(new THREE.BoxGeometry(1.2, 0.08, 0.08), poleMat, x, 5.95, z + dir * 0.55);
-      add(new THREE.BoxGeometry(0.5, 0.12, 0.25), lampHeadMat, x, 5.85, z + dir * 1.1);
-    }
-  }
   const trunkMat = std({ color: 0x7b5b3a });
   const leafMats = [std({ color: 0x2e7d32 }), std({ color: 0x388e3c }), std({ color: 0x1b5e20 })];
+  const treeSpots = [];
   const tree = (x, z, s = 1) => {
     if (ROAD_X.some((sx) => Math.abs(x - sx) < 5.4) && z > -41 && z < 8.6) return; // keep side streets clear
     if (Math.abs(x - 11.5) < 3 && Math.abs(z - 6.5) < 1.6) return;                  // bus stop
+    treeSpots.push([x, z]);
     add(new THREE.CylinderGeometry(0.15 * s, 0.22 * s, 3 * s, 7), trunkMat, x, 1.5 * s, z);
     const crown = add(new THREE.IcosahedronGeometry(1.6 * s, 0), leafMats[Math.floor(rnd() * 3)], x, 3.6 * s, z);
     crown.scale.y = 0.8;
@@ -294,12 +288,43 @@ export function buildCity(scene, { envMap = null, lowQuality = false } = {}) {
   }
   for (const sx of SIDE_X) for (let z = -20; z <= 2; z += 7) { tree(sx - 5.6, z, 0.8 + rnd() * 0.25); tree(sx + 5.6, z + 3, 0.8 + rnd() * 0.25); }
   for (const [px, pz] of [[9, -4], [12.5, 3.5], [-9, -4], [-12.5, 3.5], [-4.5, -7.5], [5, -7.6]]) tree(px, pz, 0.75 + rnd() * 0.2);
-  // street lamps on the back street & boulevard
+  // street lamps — every pole stands on a pavement, its arm reaches out over the road
+  // pavements: front z 5.1..7.3 | opposite 14.3..16.7 | back street -10.1..-7.9 & -20.1..-17.9
+  //            boulevard -25.1..-22.9 & -41.1..-38.9 | side streets x = ±18 ± 4.4
+  const lampSpots = [];
+  const lampClear = (x, z) =>
+    !treeSpots.some(([tx, tz]) => Math.hypot(tx - x, tz - z) < 2.2) &&
+    !lampSpots.some(([lx, lz]) => Math.hypot(lx - x, lz - z) < 6) &&
+    !(Math.abs(x - 11.5) < 2.8 && Math.abs(z - 6.6) < 1.5) &&       // bus stop
+    !(Math.abs(x + 4) < 3 && z > 5 && z < 8) &&                     // the warung's own lamp
+    !(z > 14 && z < 17 && ((m) => Math.min(m, 6 - m) < 0.6)((((x + 47.8) % 6) + 6) % 6)); // shophouse pillars
+  // every carriageway as [x0, x1, z0, z1]; a pole must keep 0.4 m clear of all of them
+  const CARRIAGEWAYS = [[-400, 400, 7.3, 14.3], [-400, 400, -18, -10], [-400, 400, -39, -25],
+    ...ROAD_X.map((sx) => [sx - 3.5, sx + 3.5, -40.5, 7.5])];
+  const onRoad = (x, z) => CARRIAGEWAYS.some(([x0, x1, z0, z1]) => x > x0 - 0.4 && x < x1 + 0.4 && z > z0 - 0.4 && z < z1 + 0.4);
+  const lamp = (x, z, dx, dz) => {   // (dx, dz) = unit direction toward the road
+    for (let tryN = 0; tryN < 6; tryN++) {
+      const px = dz !== 0 ? x + tryN * 1.5 : x, pz = dx !== 0 ? z + tryN * 1.5 : z;
+      if (onRoad(px, pz) || !lampClear(px, pz)) continue;
+      lampSpots.push([px, pz]);
+      add(new THREE.CylinderGeometry(0.06, 0.08, 6, 8), poleMat, px, 3, pz);
+      add(new THREE.BoxGeometry(dx ? 1.2 : 0.08, 0.08, dz ? 1.2 : 0.08), poleMat, px + dx * 0.55, 5.95, pz + dz * 0.55);
+      add(new THREE.BoxGeometry(dx ? 0.5 : 0.25, 0.12, dz ? 0.5 : 0.25), lampHeadMat, px + dx * 1.1, 5.85, pz + dz * 1.1);
+      return;
+    }
+  };
   for (let x = -60; x <= 60; x += 15) {
-    for (const [z, dir] of [[-10.0, -1], [-18.0, 1], [-24.6, -1], [-39.4, 1]]) {
-      add(new THREE.CylinderGeometry(0.06, 0.08, 6, 8), poleMat, x, 3, z);
-      add(new THREE.BoxGeometry(0.08, 0.08, 1.2), poleMat, x, 5.95, z + dir * 0.55);
-      add(new THREE.BoxGeometry(0.25, 0.12, 0.5), lampHeadMat, x, 5.85, z + dir * 1.1);
+    lamp(x, 6.5, 0, 1);       // warung side of the front road
+    lamp(x, 14.75, 0, -1);    // shophouse side of the front road
+    lamp(x, -9.0, 0, -1);     // back street, north pavement
+    lamp(x, -19.0, 0, 1);     // back street, south pavement
+    lamp(x, -24.0, 0, -1);    // boulevard, north pavement
+    lamp(x, -40.0, 0, 1);     // boulevard, south pavement
+  }
+  for (const sx of ROAD_X) {
+    for (const z of [-21.5, -5, 3]) {
+      lamp(sx - 4.3, z, 1, 0);  // west pavement, arm points east over the street
+      lamp(sx + 4.3, z + 1.5, -1, 0);
     }
   }
   // bus stop next to the warung on the front road
@@ -566,6 +591,7 @@ export function buildCity(scene, { envMap = null, lowQuality = false } = {}) {
   // ---------------------------------------------------------------------
   return {
     group: root,
+    lamps: lampSpots,
     setNight(n) {
       for (const g of glowMats) {
         if (g.kind === 'opacity') g.mat.opacity = n * g.max;
