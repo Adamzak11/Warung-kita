@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="ms">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#3b1f08" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="description" content="WARUNG KITA 3D: KOPITIAM RUSH — permainan 3D restoran Malaysia: kira bil, masak nasi lemak & tarik teh!" />
+  <title>Warung Kita 3D: Kopitiam Rush</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A7%8B%3C/text%3E%3C/svg%3E" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS (CDN, no build step) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    if (window.tailwind) {
+      tailwind.config = {
+        corePlugins: { preflight: false },
+        theme: { extend: { fontFamily: { display: ['Fredoka', 'sans-serif'], body: ['"Plus Jakarta Sans"', 'sans-serif'], mono: ['"JetBrains Mono"', 'monospace'] } } },
+      };
+    }
+  </script>
+
+  <link rel="stylesheet" href="css/style.css" />
+
+  <!-- Three.js r128 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body class="font-body">
+  <!-- 3D world -->
+  <canvas id="game-canvas" aria-label="Dunia 3D Warung Kita"></canvas>
+  <div id="bubble-layer" aria-live="polite"></div>
+  <div id="float-layer"></div>
+
+  <!-- Portrait lock overlay -->
+  <div id="rotate-overlay">
+    <div class="rotate-card">
+      <div class="rotate-phone">📱</div>
+      <h2>Sila pusingkan ke Landskap</h2>
+      <p>Warung Kita 3D direka untuk skrin lebar (16:9). Pusingkan peranti anda untuk mula berniaga! 🔄</p>
+    </div>
+  </div>
+
+  <!-- Boot error -->
+  <div id="boot-error" hidden>
+    <div class="card">
+      <h2>😢 Tidak dapat memuatkan enjin 3D</h2>
+      <p>Three.js gagal dimuatkan atau WebGL tidak disokong. Semak sambungan internet anda & muat semula halaman.</p>
+      <button onclick="location.reload()" class="btn-big">🔄 Muat Semula</button>
+    </div>
+  </div>
+
+  <!-- ============================== LOBBY ============================== -->
+  <section id="lobby" class="screen">
+    <header class="lobby-header">
+      <div class="logo">
+        <div class="logo-mark">🧋</div>
+        <div>
+          <h1>WARUNG KITA <span>3D</span></h1>
+          <div class="logo-sub">KOPITIAM RUSH</div>
+        </div>
+      </div>
+      <p class="tagline">Kira bil • Susun hidangan • Tarik teh — sebelum tengah malam!</p>
+      <div class="header-actions">
+        <button id="btn-music-lobby" class="hud-btn" title="Tukar muzik">🎵</button>
+      </div>
+    </header>
+
+    <div class="lobby-grid">
+      <!-- Restaurant + gallery -->
+      <div class="card wood-card">
+        <h3>🏪 Restoran Anda</h3>
+        <label for="in-restaurant">Nama Restoran <small>(papan tanda 3D, QR & laporan)</small></label>
+        <div class="row">
+          <input id="in-restaurant" maxlength="32" autocomplete="off" placeholder="cth: Warung Pak Mat" />
+          <button id="btn-random-name" class="btn-icon" title="Jana nama warung rawak">🎲</button>
+        </div>
+        <label for="in-player">Nama Pemain</label>
+        <input id="in-player" maxlength="16" autocomplete="off" placeholder="cth: Adam" />
+
+        <div class="section-title">👥 Galeri Pelanggan <span id="gallery-count" class="pill">0/8</span></div>
+        <div id="gallery-list" class="gallery"></div>
+        <label class="btn-upload">
+          ➕ Tambah Watak Pelanggan Full-Body
+          <input type="file" id="in-gallery" accept="image/*" multiple hidden />
+        </label>
+        <p class="hint">Gambar badan penuh, latar belakang mudah (dinding/skrin hijau) akan dibuang automatik.</p>
+      </div>
+
+      <!-- Character -->
+      <div class="card marble-card">
+        <h3>🧑‍🍳 Watak Pekerja</h3>
+        <div class="char-layout">
+          <div class="preview-wrap">
+            <canvas id="preview-canvas"></canvas>
+            <div id="preview-badge"></div>
+          </div>
+          <div class="char-controls">
+            <div class="tabs">
+              <button data-ctab="batik" class="active">🎨 Batik 3D</button>
+              <button data-ctab="upload">📷 Muat Naik</button>
+            </div>
+            <div id="ctab-batik">
+              <div class="seg">
+                <button data-gender="male">👨 Lelaki</button>
+                <button data-gender="female">🧕 Perempuan</button>
+              </div>
+              <div class="mini-label">Motif Batik</div>
+              <div id="batik-swatches" class="swatches"></div>
+              <div class="mini-label">Warna Kulit</div>
+              <div id="skin-swatches" class="swatches"></div>
+              <div id="hijab-row">
+                <div class="mini-label">Tudung Ayu</div>
+                <div id="hijab-swatches" class="swatches"></div>
+              </div>
+              <button id="btn-random-look" class="btn-sm">🎲 Rawak</button>
+            </div>
+            <div id="ctab-upload" hidden>
+              <label class="btn-upload">
+                📷 Muat Naik Watak Pekerja Full-Body
+                <input type="file" id="in-worker" accept="image/*" hidden />
+              </label>
+              <label class="check"><input type="checkbox" id="chk-bgremove" checked /> Buang latar belakang automatik</label>
+              <p id="upload-status" class="hint">Dimampatkan ke 256×384 dengan kunci-kroma sudut pintar.</p>
+              <button id="btn-clear-upload" class="btn-sm">↩️ Guna Batik 3D semula</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mode -->
+      <div class="card wood-card">
+        <h3>🎮 Mod Permainan</h3>
+        <div class="tabs mode-tabs">
+          <button data-mode="solo" class="active">⚡ Solo Rush</button>
+          <button data-mode="multi">👥 Multiplayer</button>
+        </div>
+        <div id="mode-solo">
+          <div class="role-grid">
+            <button data-solorole="all" class="active"><b>⚡ Semua Stesen</b><small>Tukar dengan 1 / 2 / 3</small></button>
+            <button data-solorole="cashier"><b>💵 Juruwang</b><small>+ Bot Chef & Air</small></button>
+            <button data-solorole="chef"><b>🍳 Chef</b><small>+ Bot Juruwang & Air</small></button>
+            <button data-solorole="drinks"><b>🧋 Pembancuh Air</b><small>+ Bot Juruwang & Chef</small></button>
+          </div>
+          <button id="btn-start-solo" class="btn-big">🔥 Buka Kedai! (Solo Rush)</button>
+        </div>
+        <div id="mode-multi" hidden>
+          <div id="mp-status" class="mp-status"></div>
+          <button id="btn-create-room" class="btn-big">🏠 Cipta Bilik Baharu</button>
+          <div class="or">— atau sertai rakan —</div>
+          <div class="row">
+            <input id="in-room-code" maxlength="4" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="Kod 4-digit" class="code-input" />
+            <button id="btn-join-room" class="btn-ok">🚪 Sertai</button>
+          </div>
+        </div>
+        <div class="lobby-links">
+          <button id="btn-recipes-lobby" class="btn-sm">📖 Buku Resipi</button>
+          <button id="btn-howto" class="btn-sm">❓ Cara Main</button>
+        </div>
+      </div>
+    </div>
+    <div id="lobby-toast"></div>
+  </section>
+
+  <!-- =========================== ROOM (waiting) =========================== -->
+  <section id="room" class="screen" hidden>
+    <div class="card room-card wood-card">
+      <div class="room-top">
+        <div>
+          <div class="mini-label">Kod Bilik</div>
+          <div class="room-code"><span id="room-code" class="mono">----</span><button id="btn-copy-code" class="btn-icon" title="Salin kod">📋</button></div>
+        </div>
+        <div class="room-info">
+          <div id="room-restaurant" class="room-rest"></div>
+          <div id="room-mode-note" class="hint"></div>
+        </div>
+      </div>
+      <div class="section-title">Pilih Peranan Anda</div>
+      <div id="room-roles" class="role-grid role-grid-3">
+        <button data-role="cashier"><b>💵 Juruwang</b><small class="cnt"></small></button>
+        <button data-role="chef"><b>🍳 Chef</b><small class="cnt"></small></button>
+        <button data-role="drinks"><b>🧋 Pembancuh Air</b><small class="cnt"></small></button>
+      </div>
+      <div class="section-title">Pasukan Warung</div>
+      <ul id="room-players" class="player-list"></ul>
+      <div class="row room-actions">
+        <button id="btn-room-leave" class="btn-sm">⬅ Keluar</button>
+        <button id="btn-room-start" class="btn-big">🔥 Buka Kedai!</button>
+      </div>
+      <p id="room-wait" class="hint center">⏳ Menunggu hos membuka kedai…</p>
+    </div>
+  </section>
+
+  <!-- ================================ HUD ================================ -->
+  <div id="hud" hidden>
+    <div id="topbar">
+      <div class="hud-chip" id="hud-day">📅 Hari 1</div>
+      <div class="hud-chip mono" id="hud-clock">☀️ 07:00 AM</div>
+      <div class="hud-chip hud-rush" id="hud-rush" hidden></div>
+      <div class="hud-chip money mono" id="hud-money">RM 0.00</div>
+      <div class="hud-chip stars" id="hud-rating">★★★</div>
+      <div class="hud-chip" id="hud-served">🍽️ 0</div>
+      <div class="hud-chip" id="hud-room" hidden></div>
+      <div id="station-tabs"></div>
+      <div class="spacer"></div>
+      <button id="btn-rush" class="hud-btn rush-btn" hidden>📣 Gesa Bot! (Rush)</button>
+      <button id="btn-recipes" class="hud-btn">📖 <span class="lbl">Buku Resipi</span></button>
+      <button id="btn-music" class="hud-btn">🎵</button>
+      <button id="btn-pause" class="hud-btn" title="Jeda (Esc)">⏸</button>
+      <button id="btn-leave-game" class="hud-btn" title="Keluar">🚪</button>
+    </div>
+    <div id="day-progress"><div id="day-progress-fill"></div></div>
+
+    <aside id="tickets">
+      <div class="col-title">🧾 Pesanan</div>
+      <div id="ticket-list"></div>
+    </aside>
+
+    <div id="station-panel">
+      <!-- CASHIER -->
+      <div id="panel-cashier" class="panel panel-cashier" hidden>
+        <div class="pcol cust-col"><div id="cash-customer"></div></div>
+        <div class="pcol reg-col" id="reg-col">
+          <div class="reg-display">
+            <span id="reg-step">JUMLAH BIL</span>
+            <span id="reg-amount" class="mono">RM 0.00</span>
+          </div>
+          <div id="keypad" class="keypad"></div>
+        </div>
+        <div class="pcol pay-col" id="pay-area"></div>
+      </div>
+
+      <!-- CHEF -->
+      <div id="panel-chef" class="panel panel-chef" hidden>
+        <div class="pcol task-col">
+          <div class="col-title">🧾 Tiket Dapur</div>
+          <div id="chef-tasks" class="task-list"></div>
+        </div>
+        <div class="pcol ing-col">
+          <div class="col-title">🥘 Susun Bahan <small>(klik +1 • − kurang)</small></div>
+          <div id="chef-ings" class="ing-grid"></div>
+        </div>
+        <div class="pcol cook-col">
+          <div id="chef-target" class="target-line"></div>
+          <div id="heat-meter" class="heat-meter">
+            <div id="heat-zone-ok" class="zone-ok"></div>
+            <div id="heat-zone" class="zone-perfect"></div>
+            <div id="heat-needle"></div>
+            <span class="heat-l">Mentah</span><span class="heat-r">Hangus</span>
+          </div>
+          <div class="row">
+            <button id="btn-cook" class="btn-fire">🔥 Masak!</button>
+            <button id="btn-lift" class="btn-ok">✋ Angkat!</button>
+          </div>
+          <div class="row">
+            <button id="btn-plate-clear" class="btn-sm">🗑️ Kosongkan Pinggan</button>
+          </div>
+          <div id="chef-status" class="status">Susun bahan ikut resipi, kemudian 🔥 Masak!</div>
+        </div>
+      </div>
+
+      <!-- DRINKS -->
+      <div id="panel-drinks" class="panel panel-drinks" hidden>
+        <div class="pcol task-col">
+          <div class="col-title">🧾 Tiket Air</div>
+          <div id="drink-tasks" class="task-list"></div>
+        </div>
+        <div class="pcol ing-col">
+          <div class="col-title">🥄 Sukat ke dalam Mug</div>
+          <div id="drink-ings" class="ing-grid ing-grid-4"></div>
+        </div>
+        <div class="pcol pour-col">
+          <div class="pour-wrap">
+            <div id="pour-meter" class="pour-meter">
+              <div id="pour-zone"></div>
+              <div id="pour-fill"></div>
+            </div>
+            <div class="pour-side">
+              <div id="drink-target" class="target-line"></div>
+              <button id="btn-tarik" class="btn-tarik">TARIK AIR!<small>tahan • Spacebar</small></button>
+              <button id="btn-mug-clear" class="btn-sm">🗑️ Buang</button>
+              <div id="drink-status" class="status">Sukat bahan, kemudian tahan TARIK AIR!</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="toast-layer"></div>
+  </div>
+
+  <!-- =========================== WALKIE-TALKIE =========================== -->
+  <aside id="chat-panel" class="collapsed" hidden>
+    <button id="chat-toggle" title="Walkie-Talkie (T)">📻<span id="chat-unread" hidden>0</span></button>
+    <div id="chat-body">
+      <div class="chat-head">📻 Walkie-Talkie</div>
+      <div id="chat-log"></div>
+      <div id="quick-chat"></div>
+      <form id="chat-form" autocomplete="off">
+        <input id="chat-input" maxlength="80" placeholder="Taip mesej…" />
+        <button type="submit">➤</button>
+      </form>
+    </div>
+  </aside>
+
+  <!-- =============================== MODALS =============================== -->
+  <div id="modal-recipes" class="modal" hidden>
+    <div class="modal-card book">
+      <button class="modal-x" data-close="modal-recipes">✕</button>
+      <h2>📖 Buku Resipi Warung</h2>
+      <div class="tabs">
+        <button data-rtab="food" class="active">🍛 Makanan</button>
+        <button data-rtab="drinks">🧋 Minuman</button>
+        <button data-rtab="pay">💰 Bayaran</button>
+        <button data-rtab="keys">⌨️ Kawalan</button>
+      </div>
+      <div id="recipe-content"></div>
+    </div>
+  </div>
+
+  <div id="modal-howto" class="modal" hidden>
+    <div class="modal-card">
+      <button class="modal-x" data-close="modal-howto">✕</button>
+      <h2>❓ Cara Main</h2>
+      <div class="howto-grid">
+        <div><div class="big">💵</div><h4>1 • Juruwang</h4><p>Kira jumlah bil (mental math!), kemudian terima bayaran: <b>Tunai</b> (beri baki tepat), <b>DuitNow QR</b> (semak jumlah — 20% salah!) atau <b>Kad PayWave</b> (taip & tap).</p></div>
+        <div><div class="big">🍳</div><h4>2 • Chef</h4><p>Susun bahan ikut resipi tepat di atas pinggan 3D, tekan <b>🔥 Masak!</b> dan <b>✋ Angkat!</b> bila jarum dalam <b>zon hijau</b>.</p></div>
+        <div><div class="big">🧋</div><h4>3 • Pembancuh Air</h4><p>Sukat serbuk, susu/gula & tambahan. <b>Tahan TARIK AIR!</b> (Spacebar) dan lepaskan dalam <b>zon emas</b> tanpa tumpah.</p></div>
+        <div><div class="big">🌙</div><h4>Hari demi Hari</h4><p>07:00 AM → 12:00 AM dalam 10 minit. Tengah malam keluar <b>Laporan Jualan Harian</b>. Teruskan ke Hari 2, 3… makin ramai pelanggan!</p></div>
+      </div>
+      <p class="dim center">Pelanggan: 👴 Pesara • 🎓 Pelajar Universiti • 🛵 Rider • 📸 Food Vlogger VIP</p>
+    </div>
+  </div>
+
+  <div id="modal-pause" class="modal" hidden>
+    <div class="modal-card small">
+      <h2>⏸ Rehat Sekejap</h2>
+      <div class="col-buttons">
+        <button id="btn-resume" class="btn-big">▶ Sambung Berniaga</button>
+        <button id="btn-pause-music" class="btn-sm">🎵</button>
+        <button class="btn-sm" onclick="document.getElementById('btn-recipes').click()">📖 Buku Resipi</button>
+        <button id="btn-quit" class="btn-bad">🚪 Keluar ke Lobi</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-report" class="modal" data-dismiss="no" hidden>
+    <div class="modal-card report">
+      <div id="report-content"></div>
+      <div class="row report-actions">
+        <button id="btn-end-game" class="btn-bad">🏁 Tamat Permainan</button>
+        <button id="btn-next-day" class="btn-big">🌅 Buka Kedai: Hari Seterusnya (Day +1)</button>
+      </div>
+      <p id="report-wait" class="hint center" hidden>⏳ Menunggu hos membuka kedai untuk hari seterusnya…</p>
+    </div>
+  </div>
+
+  <div id="modal-final" class="modal" data-dismiss="no" hidden>
+    <div class="modal-card report">
+      <div id="final-content"></div>
+      <div class="row report-actions"><button id="btn-back-lobby" class="btn-big">🏠 Kembali ke Lobi</button></div>
+    </div>
+  </div>
+
+  <script>
+    // Graceful fallback if the 3D engine CDN failed to load
+    if (!window.THREE) {
+      document.getElementById('boot-error').hidden = false;
+      document.getElementById('lobby').hidden = true;
+    }
+  </script>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
