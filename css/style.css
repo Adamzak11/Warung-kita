@@ -911,7 +911,7 @@ span.money.coin { width: 30px; height: 30px; font-size: 8px; }
 .ck-zero { grid-column: span 2; }
 .calc-send { display: block; width: 100%; margin-top: 7px; border: none; border-radius: 9px; padding: 7px; font: 600 13px var(--font-display); color: #13321a; background: linear-gradient(180deg, #b8f5c9, #5dd68a); box-shadow: 0 3px 0 #2c8a50; }
 .calc-send:active { transform: translateY(2px); box-shadow: 0 1px 0 #2c8a50; }
-#btn-calc.active { background: linear-gradient(180deg, #ffe08a, #f2b705); }
+#btn-fpv.active, #btn-calc.active { background: linear-gradient(180deg, #ffe08a, #f2b705); }
 @media (max-height: 560px) {
   .calc { width: 210px; top: calc(var(--top-h) + 6px); padding: 0 6px 6px; }
   .calc-keys { grid-auto-rows: 26px; gap: 4px; }
@@ -1199,7 +1199,7 @@ body:not(.in-game) #chat-panel { bottom: 16px; top: 90px; }
   :root { --top-h: 38px; --panel-h: clamp(160px, 45vh, 250px); }
   .hud-chip { font-size: 12px; padding: 3px 7px; }
   .hud-btn, .station-tab { font-size: 12px; padding: 3px 7px; }
-  .station-tab span, #btn-recipes .lbl, #btn-calc .lbl { display: none; }
+  .station-tab span, #btn-recipes .lbl, #btn-calc .lbl, #btn-fpv .lbl { display: none; }
   #station-panel { padding: 5px; left: 4px; right: 4px; bottom: 4px; }
   .panel { gap: 5px; }
   .pcol { padding: 5px; }

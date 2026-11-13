@@ -1207,8 +1207,25 @@ function initHUD() {
     onSend: sendCalcToRegister,
   });
   $('#btn-calc').addEventListener('click', () => toggleCalc());
+  $('#btn-fpv').addEventListener('click', () => toggleFirstPerson());
+  let fpv = false;
+  try { fpv = localStorage.getItem('warungkita3d.fpv') === '1'; } catch (e) { /* ignore */ }
+  S.scene.setFirstPerson(fpv);
+  $('#btn-fpv').classList.toggle('active', fpv);
   audio.onChange(updateMusicButtons);
   updateMusicButtons();
+}
+
+// ---------------------------------------------------------------------
+//  First-person (POV) camera
+// ---------------------------------------------------------------------
+function toggleFirstPerson(force) {
+  const on = force === undefined ? !S.scene.fp : force;
+  S.scene.setFirstPerson(on);
+  $('#btn-fpv').classList.toggle('active', on);
+  try { localStorage.setItem('warungkita3d.fpv', on ? '1' : '0'); } catch (e) { /* ignore */ }
+  audio.whoosh();
+  if (S.inGame) toast(on ? '👁️ Pandangan Orang Pertama — seret skrin untuk menoleh, klik dua kali untuk tengah semula' : '🎥 Pandangan kamera stesen', 'info', 2200);
 }
 
 // ---------------------------------------------------------------------
@@ -2246,7 +2263,7 @@ function renderRecipes(tab) {
   } else {
     box.innerHTML = `
       <div class="pay-guide">
-        <div><h4>⌨️ Papan Kekunci</h4><p><kbd>1</kbd> Juruwang • <kbd>2</kbd> Chef • <kbd>3</kbd> Pembancuh (mod Semua Stesen)<br><kbd>Numpad</kbd> keypad juruwang • <kbd>Enter</kbd> sahkan • <kbd>Backspace</kbd> padam<br><kbd>Space</kbd> Angkat! (chef) / tahan untuk TARIK AIR!<br><kbd>C</kbd> / <kbd>Delete</kbd> kosongkan keypad • <kbd>R</kbd> Buku Resipi • <kbd>T</kbd> Walkie-Talkie • <kbd>K</kbd> Kalkulator • <kbd>Esc</kbd> jeda (solo)</p></div>
+        <div><h4>⌨️ Papan Kekunci</h4><p><kbd>1</kbd> Juruwang • <kbd>2</kbd> Chef • <kbd>3</kbd> Pembancuh (mod Semua Stesen)<br><kbd>Numpad</kbd> keypad juruwang • <kbd>Enter</kbd> sahkan • <kbd>Backspace</kbd> padam<br><kbd>Space</kbd> Angkat! (chef) / tahan untuk TARIK AIR!<br><kbd>C</kbd> / <kbd>Delete</kbd> kosongkan keypad • <kbd>R</kbd> Buku Resipi • <kbd>T</kbd> Walkie-Talkie • <kbd>K</kbd> Kalkulator • <kbd>V</kbd> POV orang pertama • <kbd>Esc</kbd> jeda (solo)</p></div>
         <div><h4>⭐ Rating & Tip</h4><p>Layan pantas & PERFECT untuk tip lebih. Pelanggan yang lari menurunkan rating. <b>Food Vlogger VIP</b> memberi tip paling besar!</p></div>
         <div><h4>🌙 Kitaran Hari</h4><p>Setiap hari = 10 minit (07:00 AM → 12:00 AM). Waktu sarapan, tengah hari & malam lebih sibuk. Tengah malam → Laporan Jualan Harian.</p></div>
       </div>`;
@@ -2353,6 +2370,7 @@ function initKeyboard() {
     if (e.key === 'r' || e.key === 'R') { $('#modal-recipes').hidden ? openRecipes() : hideModal('#modal-recipes'); return; }
     if (e.key === 't' || e.key === 'T') { toggleChat(); return; }
     if (e.key === 'k' || e.key === 'K') { toggleCalc(); return; }
+    if (e.key === 'v' || e.key === 'V') { toggleFirstPerson(); return; }
     if (S.paused) return;
     if (/^Digit[123]$/.test(e.code) && canSwitchStations()) {
       setStation(C.ROLE_ORDER[Number(e.code.slice(-1)) - 1]);

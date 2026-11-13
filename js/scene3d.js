@@ -9,6 +9,7 @@ import {
   FOOD_INGREDIENTS, DRINK_INGREDIENTS, FOOD_MENU, DRINK_MENU, DUITNOW_PINK, rm,
 } from './config.js';
 import { buildCharacter } from './characters.js';
+import { buildCity } from './city.js';
 
 const THREE = window.THREE;
 
@@ -20,16 +21,19 @@ export const STATION_LAYOUT = {
     counter: new THREE.Vector3(-3.3, 0, 0.55),
     worker: new THREE.Vector3(-3.75, 0, -0.1),
     cam: { pos: new THREE.Vector3(-0.65, 2.7, 2.85), look: new THREE.Vector3(-3.6, 0.4, 0.3) },
+    fp: { eye: new THREE.Vector3(-3.66, 1.6, 0.02), look: new THREE.Vector3(-3.35, 1.18, 1.6) },
   },
   chef: {
     counter: new THREE.Vector3(0, 0, -1.85),
     worker: new THREE.Vector3(-0.15, 0, -2.75),
     cam: { pos: new THREE.Vector3(0.1, 2.05, 0.05), look: new THREE.Vector3(0.0, 0.5, -1.95) },
+    fp: { eye: new THREE.Vector3(-0.12, 1.62, -2.6), look: new THREE.Vector3(0.0, 0.42, -1.55) },
   },
   drinks: {
     counter: new THREE.Vector3(3.3, 0, -1.85),
     worker: new THREE.Vector3(3.0, 0, -2.75),
     cam: { pos: new THREE.Vector3(3.42, 2.05, 0.0), look: new THREE.Vector3(3.3, 0.55, -1.95) },
+    fp: { eye: new THREE.Vector3(3.22, 1.62, -2.6), look: new THREE.Vector3(3.2, 0.45, -1.5) },
   },
   overview: {
     cam: { pos: new THREE.Vector3(7.6, 5.4, 10.5), look: new THREE.Vector3(0, 0.9, -0.5) },
@@ -239,11 +243,14 @@ export class Scene3D {
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
     this.scene = new THREE.Scene();
-    this.camera = new THREE.PerspectiveCamera(55, 16 / 9, 0.05, 200);
+    this.camera = new THREE.PerspectiveCamera(55, 16 / 9, 0.05, 900);
     this.camPos = STATION_LAYOUT.overview.cam.pos.clone();
     this.camLook = STATION_LAYOUT.overview.cam.look.clone();
     this.camTarget = { pos: this.camPos.clone(), look: this.camLook.clone() };
     this.view = 'overview';
+    this.fp = false;      // first-person (POV) mode
+    this.fpYaw = 0;
+    this.fpPitch = 0;
     this.camera.position.copy(this.camPos);
     this.camera.lookAt(this.camLook);
 
@@ -276,6 +283,7 @@ export class Scene3D {
     this.setRestaurantName('Warung Kita');
     this.setTimeOfDay(7);
 
+    this._initLookDrag();
     this._onResize = () => this.resize();
     window.addEventListener('resize', this._onResize);
     this.resize();
@@ -340,7 +348,7 @@ export class Scene3D {
       depthWrite: false,
       fog: false,
     });
-    this.sky = new THREE.Mesh(new THREE.SphereGeometry(90, 32, 16), mat);
+    this.sky = new THREE.Mesh(new THREE.SphereGeometry(460, 32, 16), mat);
     this.skyUniforms = uniforms;
     this.scene.add(this.sky);
 
@@ -350,21 +358,21 @@ export class Scene3D {
     const r = seeded(99);
     for (let i = 0; i < 500; i++) {
       const th = r() * Math.PI * 2, ph = r() * Math.PI * 0.45;
-      pts.push(80 * Math.cos(th) * Math.sin(ph), 80 * Math.cos(ph) + 2, 80 * Math.sin(th) * Math.sin(ph));
+      pts.push(400 * Math.cos(th) * Math.sin(ph), 400 * Math.cos(ph) + 10, 400 * Math.sin(th) * Math.sin(ph));
     }
     starGeo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
-    this.stars = new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.35, transparent: true, opacity: 0, fog: false, depthWrite: false }));
+    this.stars = new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 1.8, transparent: true, opacity: 0, fog: false, depthWrite: false }));
     this.scene.add(this.stars);
 
     // sun & moon discs
     this.sunDisc = new THREE.Sprite(new THREE.SpriteMaterial({ map: this.dotTex, color: 0xfff2c0, fog: false, depthWrite: false }));
-    this.sunDisc.scale.set(9, 9, 1);
+    this.sunDisc.scale.set(46, 46, 1);
     this.scene.add(this.sunDisc);
     this.moonDisc = new THREE.Sprite(new THREE.SpriteMaterial({ map: this.dotTex, color: 0xdfe8ff, fog: false, depthWrite: false, transparent: true }));
-    this.moonDisc.scale.set(5, 5, 1);
+    this.moonDisc.scale.set(26, 26, 1);
     this.scene.add(this.moonDisc);
 
-    this.scene.fog = new THREE.Fog(0xcfe9ff, 25, 85);
+    this.scene.fog = new THREE.Fog(0xcfe9ff, 70, 430);
   }
 
   _buildLights() {
@@ -534,32 +542,28 @@ export class Scene3D {
   }
 
   _buildStreet() {
-    const side = new THREE.Mesh(new THREE.PlaneGeometry(40, 2.2), new THREE.MeshStandardMaterial({ color: 0xb9b2a5, roughness: 0.95 }));
+    const side = new THREE.Mesh(new THREE.PlaneGeometry(300, 2.2), new THREE.MeshStandardMaterial({ color: 0xb9b2a5, roughness: 0.95 }));
     side.rotation.x = -Math.PI / 2;
     side.position.set(0, 0.01, 6.2);
     side.receiveShadow = true;
     this.scene.add(side);
-    const road = new THREE.Mesh(new THREE.PlaneGeometry(60, 7), new THREE.MeshStandardMaterial({ map: asphaltTexture(), roughness: 0.95 }));
+    const road = new THREE.Mesh(new THREE.PlaneGeometry(400, 7), new THREE.MeshStandardMaterial({ map: asphaltTexture(), roughness: 0.95 }));
     road.rotation.x = -Math.PI / 2;
     road.position.set(0, 0, 10.8);
+    road.material.map.repeat.set(80, 1.6);
     road.receiveShadow = true;
     this.scene.add(road);
     const lineMat = new THREE.MeshBasicMaterial({ color: 0xf6d04d });
-    for (let x = -28; x < 28; x += 3) {
+    for (let x = -150; x < 150; x += 4) {
       const ln = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.12), lineMat);
       ln.rotation.x = -Math.PI / 2;
       ln.position.set(x, 0.02, 10.8);
       this.scene.add(ln);
     }
-    const grass = new THREE.Mesh(new THREE.PlaneGeometry(160, 160), new THREE.MeshStandardMaterial({ color: 0x5f8f3e, roughness: 1 }));
-    grass.rotation.x = -Math.PI / 2;
-    grass.position.set(0, -0.02, 0);
-    this.scene.add(grass);
-
     // palm trees
     const trunkMat = new THREE.MeshStandardMaterial({ color: 0x8b6b45, roughness: 0.9 });
     const frondMat = new THREE.MeshStandardMaterial({ color: 0x2f7d32, roughness: 0.8, side: THREE.DoubleSide });
-    for (const [x, z] of [[-10, 15], [-3, 16], [6, 15.5], [12, 14], [-14, 6], [14, 5]]) {
+    for (const [x, z] of [[-14, 6], [14, 5], [-9, 6.3], [9, 6.3]]) {
       const tree = new THREE.Group();
       const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.22, 5, 8), trunkMat);
       trunk.position.y = 2.5;
@@ -575,21 +579,8 @@ export class Scene3D {
       tree.position.set(x, 0, z);
       this.scene.add(tree);
     }
-    // distant shophouses
-    const colors = [0xf2c14e, 0x8fc0a9, 0xf78154, 0xb4a7d6, 0x9ad1d4];
-    for (let i = 0; i < 9; i++) {
-      const h = 4 + (i % 3) * 1.5;
-      const b = this._box(4.2, h, 3, new THREE.MeshStandardMaterial({ color: colors[i % colors.length], roughness: 0.9 }), -18 + i * 4.5, h / 2, 19, { cast: false });
-      b.receiveShadow = false;
-      const winMat = new THREE.MeshStandardMaterial({ color: 0x223, emissive: 0xffcc66, emissiveIntensity: 0 });
-      this.lampMats.push(winMat);
-      for (let k = 0; k < 2; k++) {
-        const win = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.9), winMat);
-        win.position.set(-18 + i * 4.5 - 0.9 + k * 1.8, h - 1.2, 17.49);
-        win.rotation.y = Math.PI;
-        this.scene.add(win);
-      }
-    }
+    // the surrounding Kuala Lumpur-style city (shophouses, traffic, LRT, skyline)
+    this.city = buildCity(this.scene, { lowQuality: this.lowQuality });
     // street lamp
     const poleMat = new THREE.MeshStandardMaterial({ color: 0x37474f, metalness: 0.5, roughness: 0.4 });
     const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.08, 4.4, 8), poleMat);
@@ -1407,6 +1398,7 @@ export class Scene3D {
       this.scene.add(obj);
       this.workers[role] = { obj, busy: 0, data: w };
     }
+    this._applyFpHide();
   }
 
   setWorkerBusy(role, busy) {
@@ -1562,9 +1554,46 @@ export class Scene3D {
   setView(name, instant = false) {
     const L = STATION_LAYOUT[name] || STATION_LAYOUT.overview;
     this.view = name;
-    this.camTarget.pos.copy(L.cam.pos);
-    this.camTarget.look.copy(L.cam.look);
-    if (instant) { this.camPos.copy(L.cam.pos); this.camLook.copy(L.cam.look); }
+    this.fpYaw = 0;
+    this.fpPitch = 0;
+    const fp = this.fp && L.fp;
+    this.camTarget.pos.copy(fp ? L.fp.eye : L.cam.pos);
+    this.camTarget.look.copy(fp ? L.fp.look : L.cam.look);
+    if (instant) { this.camPos.copy(this.camTarget.pos); this.camLook.copy(this.camTarget.look); }
+    this._applyFpHide();
+    this.resize();
+  }
+
+  /** Toggle first-person (POV) camera at the current station */
+  setFirstPerson(on) {
+    this.fp = !!on;
+    this.setView(this.view);
+  }
+
+  get isFirstPerson() { return this.fp && !!(STATION_LAYOUT[this.view] && STATION_LAYOUT[this.view].fp); }
+
+  /** Hide the worker whose eyes we are looking through */
+  _applyFpHide() {
+    for (const role of Object.keys(this.workers)) {
+      const w = this.workers[role];
+      if (w) w.obj.visible = !(this.isFirstPerson && role === this.view);
+    }
+  }
+
+  /** Drag on the 3D view (mouse or finger) to look around in POV mode; double-click recentres */
+  _initLookDrag() {
+    let drag = null;
+    const c = this.canvas;
+    c.addEventListener('pointerdown', (e) => { if (this.isFirstPerson) { drag = { x: e.clientX, y: e.clientY, yaw: this.fpYaw, pitch: this.fpPitch }; c.setPointerCapture(e.pointerId); } });
+    c.addEventListener('pointermove', (e) => {
+      if (!drag) return;
+      this.fpYaw = Math.max(-1.3, Math.min(1.3, drag.yaw - (e.clientX - drag.x) * 0.005));
+      this.fpPitch = Math.max(-0.7, Math.min(0.7, drag.pitch - (e.clientY - drag.y) * 0.004));
+    });
+    const end = () => { drag = null; };
+    c.addEventListener('pointerup', end);
+    c.addEventListener('pointercancel', end);
+    c.addEventListener('dblclick', () => { this.fpYaw = 0; this.fpPitch = 0; });
   }
 
   _updateCamera(dt) {
@@ -1574,10 +1603,20 @@ export class Scene3D {
       const r = Math.hypot(base.x, base.z);
       this.camTarget.pos.set(Math.sin(a + 0.6) * r * 0.75, base.y, Math.cos(a + 0.6) * r * 0.85 + 1);
     }
-    const k = 1 - Math.exp(-dt * 4.2);
+    if (this.isFirstPerson) {
+      // eye stays put; drag rotates the gaze (yaw around Y, pitch around the right axis)
+      const L = STATION_LAYOUT[this.view].fp;
+      const dir = L.look.clone().sub(L.eye);
+      dir.applyAxisAngle(new THREE.Vector3(0, 1, 0), this.fpYaw);
+      const right = new THREE.Vector3().crossVectors(dir, new THREE.Vector3(0, 1, 0)).normalize();
+      dir.applyAxisAngle(right, this.fpPitch);
+      this.camTarget.pos.copy(L.eye);
+      this.camTarget.look.copy(L.eye).add(dir);
+    }
+    const k = 1 - Math.exp(-dt * (this.isFirstPerson ? 7 : 4.2));
     this.camPos.lerp(this.camTarget.pos, k);
     this.camLook.lerp(this.camTarget.look, k);
-    const sway = this.view === 'overview' ? 0 : 0.012;
+    const sway = this.view === 'overview' ? 0 : this.isFirstPerson ? 0.006 : 0.012;
     this.camera.position.set(this.camPos.x + Math.sin(this.time * 0.5) * sway, this.camPos.y + Math.sin(this.time * 0.7) * sway * 0.5, this.camPos.z);
     this.camera.lookAt(this.camLook);
   }
@@ -1599,7 +1638,7 @@ export class Scene3D {
     const sx = Math.cos(ang) * 30, sy = Math.max(1.5, Math.sin(ang) * 26), sz = 14;
     this.sun.position.set(sx, sy, sz);
     this.sun.target.position.set(0, 0, 0);
-    this.sunDisc.position.set(sx * 2.2, Math.sin(ang) * 26 * 2.2 - 4, sz * 2.4);
+    this.sunDisc.position.set(sx, Math.sin(ang) * 26 - 3, sz).normalize().multiplyScalar(400);
     this.sunDisc.material.color.copy(s.sunColor);
     this.sunDisc.visible = hour < 19.6;
     const night = clamp01((hour - 19) / 2);
@@ -1607,11 +1646,12 @@ export class Scene3D {
     this.moonDisc.visible = night > 0.05;
     this.moonDisc.material.opacity = night;
     const mAng = clamp01((hour - 18.5) / 7) * Math.PI * 0.8 + 0.3;
-    this.moonDisc.position.set(-Math.cos(mAng) * 60, Math.sin(mAng) * 45, 55);
+    this.moonDisc.position.set(-Math.cos(mAng) * 60, Math.sin(mAng) * 45, 55).normalize().multiplyScalar(400);
     this.lampLevel = s.lamp;
     for (const l of this.interiorLights) l.intensity = 0.25 + s.lamp * 0.85;
     for (const m of this.lampMats) m.emissiveIntensity = 0.15 + s.lamp * 1.1;
     this.streetLight.intensity = night * 1.4;
+    if (this.city) this.city.setNight(clamp01((hour - 18.4) / 1.4));
     this.streetHeadMat.emissiveIntensity = night * 2;
     this.ambient.intensity = 0.12 + s.lamp * 0.12;
     const tint = clamp01(0.55 + s.hemi * 0.5 + s.lamp * 0.15);
@@ -1714,12 +1754,13 @@ export class Scene3D {
     this.renderer.setSize(w, h, false);
     this.camera.aspect = w / h;
     // narrower screens need a wider FOV to keep the station in frame
-    this.camera.fov = this.camera.aspect < 1.5 ? 62 : 55;
+    this.camera.fov = this.isFirstPerson ? (this.camera.aspect < 1.5 ? 78 : 70) : this.camera.aspect < 1.5 ? 62 : 55;
     this.camera.updateProjectionMatrix();
   }
 
   update(dt) {
     this.time += dt;
+    if (this.city) this.city.update(dt, this.time);
     this._updateCamera(dt);
     this._updateCharacters(dt);
     this._updateMugs(dt);

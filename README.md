@@ -36,6 +36,8 @@ css/style.css       Teak-wood & kopitiam-marble textures, tactile buttons, lands
 js/config.js        Menu + exact recipes + prices, customer archetypes, Batik canvas/SVG motifs, Firebase config placeholder
 js/audio.js         Procedural Web Audio SFX + music sequencer (Tradisional Melayu Gamelan/Inang • Kopitiam Jazz Bossa • Mute)
 js/characters.js    Full-body photo upload (corner chroma-key bg removal → 256×384 DataURL) + 3D Batik character generator
+js/city.js          Kuala Lumpur-style city around the warung (shophouses, traffic, LRT, skyline, night lights)
+js/calculator.js    Kalkulator Pantas (floating quick calculator for the cashier)
 js/scene3d.js       3D warung, 10-min day/night cycle, signboard, DuitNow standee, stations, food stacking, Teh Tarik mugs
 js/multiplayer.js   Firebase v10 Realtime Database rooms + local Demo Mode (BroadcastChannel) with the same API
 js/main.js          Game loop, lobby, 3 workstations, host simulation, AI bots, chat, Recipe Book, daily reports
@@ -72,7 +74,7 @@ netlify.toml        Static-hosting config
 **Day cycle:** each day lasts 600 s (07:00 AM → 12:00 AM). Breakfast, lunch and dinner rushes bring more customers. At midnight the **Laporan Jualan Harian** (daily sales report) appears; choose **Buka Kedai: Hari Seterusnya (Day +1)** for an endless run that gets harder each day, or **Tamat Permainan** to end.
 
 ### ⌨️ Controls
-`1` `2` `3` switch station (Semua Stesen mode) · Numpad / digits = register keypad · `Enter` confirm · `Backspace` delete · `C`/`Delete` clear · `Space` = Angkat! (chef) / hold to TARIK (drinks) · `R` Recipe Book · `T` Walkie-Talkie · `K` Kalkulator Pantas · `Esc` pause (solo)
+`1` `2` `3` switch station (Semua Stesen mode) · Numpad / digits = register keypad · `Enter` confirm · `Backspace` delete · `C`/`Delete` clear · `Space` = Angkat! (chef) / hold to TARIK (drinks) · `R` Recipe Book · `T` Walkie-Talkie · `K` Kalkulator Pantas · `V` first-person POV (drag to look around) · `Esc` pause (solo)
 
 ### Modes
 * **Solo Rush:** play **all stations** yourself (switch with 1/2/3), or pick **one role** and AI bots run the others. The **📣 Gesa Bot! (Rush)** button speeds the bots up for 15 s.
