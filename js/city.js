@@ -246,25 +246,33 @@ export function buildCity(scene, { envMap = null, lowQuality = false } = {}) {
     flat(7, 48, asphalt, sx, -16.5, 0.02);   // above the pavements so junctions read as paved
     flat(1.8, 48, paveMat, sx - 4.4, -16.5, 0.013);
     flat(1.8, 48, paveMat, sx + 4.4, -16.5, 0.013);
-    for (let z = -38; z < 6; z += 4) if (Math.abs(z + 14) > 4 && Math.abs(z + 32) > 7) flat(0.15, 1.8, markMat, sx, z, 0.024);
+    for (let z = -38; z < 6; z += 4) if (Math.abs(z + 14) > 4 && Math.abs(z + 32) > 7 && Math.abs(z - 4) > 3) flat(0.15, 1.8, markMat, sx, z, 0.024);
   }
   // lane markings on the long roads
   for (let x = -150; x < 150; x += 4) {
     if (SIDE_X.some((sx) => Math.abs(x - sx) < 5)) continue;
-    flat(1.8, 0.15, yellowMat, x, -14, 0.016);
+    if (Math.abs(x) >= 3) flat(1.8, 0.15, yellowMat, x, -14, 0.016);
     flat(1.8, 0.12, markMat, x, -28.5, 0.016);
     flat(1.8, 0.12, markMat, x, -35.5, 0.016);
   }
-  // zebra crossings: in front of the warung and at the side-street mouths
-  const zebra = (cx, cz, alongX, n = 8) => {
+  // zebra crossings (Malaysian style): bars lie parallel to the traffic and are
+  // stacked across the road, with a solid border line on each side of the walkway
+  const zebra = (cx, cz, roadAlongX, roadWidth) => {
+    const barLen = 3.0, barW = 0.5, gap = 0.55, half = barLen / 2 + 0.35;
+    const n = Math.floor((roadWidth - 0.4) / (barW + gap));
     for (let k = 0; k < n; k++) {
-      const o = (k - (n - 1) / 2) * 0.9;
-      if (alongX) flat(0.5, 4.6, markMat, cx + o, cz, 0.026); else flat(4.6, 0.5, markMat, cx, cz + o, 0.026);
+      const o = (k - (n - 1) / 2) * (barW + gap);
+      if (roadAlongX) flat(barLen, barW, markMat, cx, cz + o, 0.026);   // bar along x, stacked along z
+      else flat(barW, barLen, markMat, cx + o, cz, 0.026);              // bar along z, stacked along x
+    }
+    for (const side of [-half, half]) {
+      if (roadAlongX) flat(0.16, roadWidth - 0.2, markMat, cx + side, cz, 0.027);
+      else flat(roadWidth - 0.2, 0.16, markMat, cx, cz + side, 0.027);
     }
   };
-  zebra(0, 10.8, true, 9);
-  zebra(0, -14, true, 7);
-  for (const sx of SIDE_X) zebra(sx, 4.5, false, 4);
+  zebra(0, 10.8, true, 7);                       // front road, right outside the warung
+  zebra(0, -14, true, 8);                        // back street
+  for (const sx of SIDE_X) zebra(sx, 4.0, false, 7); // across each side street near the junction
   // little parks around the shop + behind it
   flat(7, 13, grassMat, 10.9, -1.3, 0.011);
   flat(7, 13, grassMat, -10.9, -1.3, 0.011);

@@ -555,6 +555,7 @@ export class Scene3D {
     this.scene.add(road);
     const lineMat = new THREE.MeshBasicMaterial({ color: 0xf6d04d });
     for (let x = -150; x < 150; x += 4) {
+      if (Math.abs(x) < 3) continue; // keep the zebra crossing outside the warung clean
       const ln = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.12), lineMat);
       ln.rotation.x = -Math.PI / 2;
       ln.position.set(x, 0.02, 10.8);
