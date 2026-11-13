@@ -209,6 +209,7 @@
       <div id="station-tabs"></div>
       <div class="spacer"></div>
       <button id="btn-rush" class="hud-btn rush-btn" hidden>📣 Gesa Bot! (Rush)</button>
+      <button id="btn-calc" class="hud-btn" title="Kalkulator Pantas (K)">🧮 <span class="lbl">Kalkulator</span></button>
       <button id="btn-recipes" class="hud-btn">📖 <span class="lbl">Buku Resipi</span></button>
       <button id="btn-music" class="hud-btn">🎵</button>
       <button id="btn-pause" class="hud-btn" title="Jeda (Esc)">⏸</button>
@@ -291,6 +292,19 @@
       </div>
     </div>
     <div id="toast-layer"></div>
+
+    <!-- Kalkulator Pantas (floating, draggable) -->
+    <div id="calc" class="calc" hidden>
+      <div class="calc-head" title="Seret untuk alih"><span>🧮 Kalkulator Pantas</span><small></small><button type="button" class="calc-close" title="Tutup (K)">✕</button></div>
+      <div class="calc-screen">
+        <div class="calc-history"></div>
+        <div class="calc-expr mono">0</div>
+        <div class="calc-result mono">RM 0.00</div>
+      </div>
+      <div class="calc-quick"></div>
+      <div class="calc-keys"></div>
+      <button type="button" class="calc-send">➜ Hantar ke Mesin Daftar</button>
+    </div>
   </div>
 
   <!-- =========================== WALKIE-TALKIE =========================== -->

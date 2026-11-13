@@ -873,6 +873,58 @@ span.money.coin { width: 30px; height: 30px; font-size: 8px; }
 .btn-tarik.pressed { transform: translateY(5px); box-shadow: 0 1px 0 #a8730a; background: radial-gradient(circle at 50% 30%, #fff, #ffcf3d 70%); }
 
 /* ------------------------------------------------------------------ */
+/*  Kalkulator Pantas                                                  */
+/* ------------------------------------------------------------------ */
+.calc {
+  position: absolute;
+  right: 66px;
+  top: calc(var(--top-h) + 12px);
+  width: 236px;
+  z-index: 20;
+  border-radius: 16px;
+  padding: 0 8px 8px;
+  background: linear-gradient(180deg, #4b5560, #2e353c);
+  border: 2px solid #1e2328;
+  box-shadow: 0 0 0 3px var(--gold), var(--shadow);
+  color: #fff;
+  animation: pop 0.2s ease;
+}
+.calc.sent { box-shadow: 0 0 0 3px #4fd27e, 0 0 24px rgba(79, 210, 126, 0.8); }
+.calc-head { display: flex; align-items: center; gap: 6px; padding: 7px 2px 6px; cursor: move; touch-action: none; font-family: var(--font-display); font-weight: 600; font-size: 14px; }
+.calc-head small { flex: 1; font-size: 10px; opacity: 0.55; font-weight: 400; }
+.calc-close { border: none; border-radius: 50%; width: 24px; height: 24px; padding: 0; background: rgba(255, 255, 255, 0.15); color: #fff; font-size: 12px; }
+.calc-screen { background: #0b2614; border: 2px solid #061409; border-radius: 9px; padding: 4px 8px; text-align: right; box-shadow: inset 0 0 12px rgba(93, 255, 138, 0.15); }
+.calc-history { font: 500 10px var(--font-mono); color: #5dff8a; opacity: 0.5; min-height: 12px; max-height: 26px; overflow: hidden; }
+.calc-expr { font-size: 13px; color: #b9ffcc; word-break: break-all; min-height: 18px; }
+.calc-result { font-size: 20px; font-weight: 700; color: #5dff8a; text-shadow: 0 0 8px rgba(93, 255, 138, 0.6); }
+.calc-quick { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0; min-height: 22px; }
+.calc-hint { font-size: 10px; opacity: 0.6; }
+.calc-chip { border: 1px solid rgba(255, 230, 180, 0.4); background: rgba(255, 255, 255, 0.1); color: #fff; border-radius: 99px; padding: 2px 7px; font: 600 11px var(--font-mono); }
+.calc-chip:active { background: var(--gold); color: var(--ink); }
+.calc-chip-all { background: rgba(226, 178, 58, 0.3); border-color: var(--gold); font-family: var(--font-display); }
+.calc-keys { display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 34px; gap: 5px; }
+.ck { border: none; border-radius: 8px; background: linear-gradient(180deg, #fbfbfb, #d9dde2); box-shadow: 0 3px 0 #8c949c; color: #222; font: 700 16px var(--font-mono); padding: 0; }
+.ck:active { transform: translateY(2px); box-shadow: 0 1px 0 #8c949c; }
+.ck-op { background: linear-gradient(180deg, #ffe0a3, #f2b705); box-shadow: 0 3px 0 #9b6f05; }
+.ck-fn { background: linear-gradient(180deg, #f8a5a5, #d64545); color: #fff; box-shadow: 0 3px 0 #8a2222; }
+.ck-eq { grid-row: span 2; background: linear-gradient(180deg, #4fd27e, #279a51); color: #fff; box-shadow: 0 3px 0 #1b6e39; font-size: 20px; }
+.ck-zero { grid-column: span 2; }
+.calc-send { display: block; width: 100%; margin-top: 7px; border: none; border-radius: 9px; padding: 7px; font: 600 13px var(--font-display); color: #13321a; background: linear-gradient(180deg, #b8f5c9, #5dd68a); box-shadow: 0 3px 0 #2c8a50; }
+.calc-send:active { transform: translateY(2px); box-shadow: 0 1px 0 #2c8a50; }
+#btn-calc.active { background: linear-gradient(180deg, #ffe08a, #f2b705); }
+@media (max-height: 560px) {
+  .calc { width: 210px; top: calc(var(--top-h) + 6px); padding: 0 6px 6px; }
+  .calc-keys { grid-auto-rows: 26px; gap: 4px; }
+  .ck { font-size: 14px; }
+  .calc-history { display: none; }
+  .calc-result { font-size: 16px; }
+  .calc-head { padding: 4px 2px; font-size: 12px; }
+  .calc-head small { display: none; }
+  .calc-send { padding: 4px; font-size: 12px; margin-top: 5px; }
+  .calc-quick { margin: 4px 0; }
+}
+
+/* ------------------------------------------------------------------ */
 /*  Walkie-talkie chat                                                 */
 /* ------------------------------------------------------------------ */
 #chat-panel {
@@ -1147,7 +1199,7 @@ body:not(.in-game) #chat-panel { bottom: 16px; top: 90px; }
   :root { --top-h: 38px; --panel-h: clamp(160px, 45vh, 250px); }
   .hud-chip { font-size: 12px; padding: 3px 7px; }
   .hud-btn, .station-tab { font-size: 12px; padding: 3px 7px; }
-  .station-tab span, #btn-recipes .lbl { display: none; }
+  .station-tab span, #btn-recipes .lbl, #btn-calc .lbl { display: none; }
   #station-panel { padding: 5px; left: 4px; right: 4px; bottom: 4px; }
   .panel { gap: 5px; }
   .pcol { padding: 5px; }

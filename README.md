@@ -72,7 +72,7 @@ netlify.toml        Static-hosting config
 **Day cycle:** each day lasts 600 s (07:00 AM → 12:00 AM). Breakfast, lunch and dinner rushes bring more customers. At midnight the **Laporan Jualan Harian** (daily sales report) appears; choose **Buka Kedai: Hari Seterusnya (Day +1)** for an endless run that gets harder each day, or **Tamat Permainan** to end.
 
 ### ⌨️ Controls
-`1` `2` `3` switch station (Semua Stesen mode) · Numpad / digits = register keypad · `Enter` confirm · `Backspace` delete · `C`/`Delete` clear · `Space` = Angkat! (chef) / hold to TARIK (drinks) · `R` Recipe Book · `T` Walkie-Talkie · `Esc` pause (solo)
+`1` `2` `3` switch station (Semua Stesen mode) · Numpad / digits = register keypad · `Enter` confirm · `Backspace` delete · `C`/`Delete` clear · `Space` = Angkat! (chef) / hold to TARIK (drinks) · `R` Recipe Book · `T` Walkie-Talkie · `K` Kalkulator Pantas · `Esc` pause (solo)
 
 ### Modes
 * **Solo Rush:** play **all stations** yourself (switch with 1/2/3), or pick **one role** and AI bots run the others. The **📣 Gesa Bot! (Rush)** button speeds the bots up for 15 s.
