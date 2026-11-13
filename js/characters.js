@@ -368,8 +368,6 @@ export function buildBatikCharacter(a = defaultAppearance(), o = {}) {
     const puff = mesh(new THREE.SphereGeometry(0.135, 20, 12), white, 0, capY + 0.1, -0.01);
     puff.scale.set(1, 0.62, 1);
     head.add(puff);
-    const apron = mesh(new THREE.BoxGeometry(0.3, 0.62, 0.02), white, 0, 0.88, female ? 0.2 : 0.185);
-    body.add(apron);
   } else if (role === 'cashier') {
     const tagY = female ? 1.06 : 1.16, tagZ = female ? 0.205 : 0.19;
     body.add(mesh(new THREE.BoxGeometry(0.07, 0.035, 0.012), std('#ffffff'), 0.09, tagY, tagZ));
@@ -378,13 +376,10 @@ export function buildBatikCharacter(a = defaultAppearance(), o = {}) {
     lanyard.rotation.z = Math.PI;
     body.add(lanyard);
   } else if (role === 'drinks') {
-    const apron = mesh(new THREE.BoxGeometry(0.3, 0.55, 0.02), std('#6d4c41'), 0, 0.86, female ? 0.2 : 0.185);
-    body.add(apron);
     const towelMat = new THREE.MeshStandardMaterial({ map: goodMorningTowelTexture(), roughness: 0.9 });
-    const towel = female
-      ? mesh(new THREE.BoxGeometry(0.11, 0.3, 0.015), towelMat, -0.13, 0.86, 0.215)
-      : mesh(new THREE.BoxGeometry(0.11, 0.015, 0.42), towelMat, -0.15, 1.34, 0.0);
-    if (!female) towel.rotation.z = 0.35;
+    // "Good Morning" towel draped over the left shoulder
+    const towel = mesh(new THREE.BoxGeometry(0.11, 0.015, 0.42), towelMat, -0.15, 1.34, 0.0);
+    towel.rotation.z = 0.35;
     body.add(towel);
   }
 
