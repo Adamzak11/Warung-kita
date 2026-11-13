@@ -454,7 +454,7 @@ export function buildBatikCharacter(a = defaultAppearance(), o = {}) {
   return group;
 }
 
-/** Neat, graceful "ayu" tudung: cap + framed face + shoulder drape + brooch */
+/** Neat, graceful "ayu" tudung: cap + framed face + chin wrap + side pin (no chest drape) */
 function buildHijab(head, body, a) {
   const color = HIJAB_COLORS[a.hijab ?? 0] || HIJAB_COLORS[0];
   const mat = new THREE.MeshStandardMaterial({ color, roughness: 0.55, metalness: 0.05, side: THREE.DoubleSide });
@@ -478,22 +478,9 @@ function buildHijab(head, body, a) {
   const chin = mesh(new THREE.SphereGeometry(R + 0.001, 32, 8, 0, Math.PI * 2, Math.PI * 0.73, Math.PI * 0.27), mat, 0, -0.004, 0);
   chin.scale.set(1, 1.08, 1);
   head.add(chin);
-  // d) graceful bell-shaped drape over the shoulders (smooth lathe profile)
-  const prof = [
-    [0.104, 0.0], [0.118, -0.03], [0.15, -0.07], [0.19, -0.11], [0.214, -0.16],
-    [0.228, -0.22], [0.234, -0.27], [0.232, -0.295],
-  ].map(([r, y]) => new THREE.Vector2(r, y));
-  const drape = mesh(new THREE.LatheGeometry(prof, 40), mat, 0, 1.425, 0);
-  drape.scale.set(1, 1, 0.92);
-  body.add(drape);
-  // soft hem trim
-  const hem = mesh(new THREE.TorusGeometry(0.233, 0.006, 6, 40), innerMat, 0, 1.132, 0);
-  hem.rotation.x = Math.PI / 2;
-  hem.scale.set(1, 0.92, 1);
-  body.add(hem);
-  // f) gold brooch
-  const brooch = mesh(new THREE.SphereGeometry(0.017, 12, 10), std('#e6b422', { metalness: 0.25, roughness: 0.3, emissive: '#3a2a00' }), 0.075, 1.4, 0.15);
-  body.add(brooch);
+  // d) small gold pin at the side of the chin (nothing drapes over the chest)
+  const pin = mesh(new THREE.SphereGeometry(0.014, 12, 10), std('#e6b422', { metalness: 0.25, roughness: 0.3, emissive: '#3a2a00' }), 0.088, -0.07, 0.1);
+  head.add(pin);
 }
 
 // ---------------------------------------------------------------------
