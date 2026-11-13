@@ -369,9 +369,10 @@ export function buildBatikCharacter(a = defaultAppearance(), o = {}) {
     puff.scale.set(1, 0.62, 1);
     head.add(puff);
   } else if (role === 'cashier') {
-    const tagY = female ? 1.06 : 1.16, tagZ = female ? 0.205 : 0.19;
-    body.add(mesh(new THREE.BoxGeometry(0.07, 0.035, 0.012), std('#ffffff'), 0.09, tagY, tagZ));
-    body.add(mesh(new THREE.BoxGeometry(0.07, 0.01, 0.014), std('#d62839'), 0.09, tagY + 0.02, tagZ));
+    // name tag on the chest (same for Lelaki & Perempuan): red frame so it stands out on Batik
+    const tagY = 1.13, tagZ = 0.196;
+    body.add(mesh(new THREE.BoxGeometry(0.1, 0.058, 0.01), std('#d62839'), 0.085, tagY, tagZ));
+    body.add(mesh(new THREE.BoxGeometry(0.086, 0.034, 0.012), std('#ffffff', { emissive: '#222222' }), 0.085, tagY - 0.006, tagZ + 0.002));
     const lanyard = mesh(new THREE.TorusGeometry(0.11, 0.006, 6, 24, Math.PI), std('#d62839'), 0, 1.3, 0.1);
     lanyard.rotation.z = Math.PI;
     body.add(lanyard);
