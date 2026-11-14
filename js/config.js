@@ -11,13 +11,13 @@ export const VERSION = '1.0.0';
 //  to the local Demo Mode (same-browser tabs via BroadcastChannel).
 // ---------------------------------------------------------------------
 export const FIREBASE_CONFIG = {
-  apiKey: 'YOUR_FIREBASE_API_KEY',
-  authDomain: 'YOUR_PROJECT_ID.firebaseapp.com',
-  databaseURL: 'https://YOUR_PROJECT_ID-default-rtdb.asia-southeast1.firebasedatabase.app',
-  projectId: 'YOUR_PROJECT_ID',
-  storageBucket: 'YOUR_PROJECT_ID.appspot.com',
-  messagingSenderId: 'YOUR_SENDER_ID',
-  appId: 'YOUR_APP_ID',
+  apiKey: 'AIzaSyAZWmRLobPnJFfDBABWEFCMcxASauK8S7A',
+  authDomain: 'warung-kita-2cca7.firebaseapp.com',
+  databaseURL: 'https://warung-kita-2cca7-default-rtdb.asia-southeast1.firebasedatabase.app',
+  projectId: 'warung-kita-2cca7',
+  storageBucket: 'warung-kita-2cca7.firebasestorage.app',
+  messagingSenderId: '256716137047',
+  appId: '1:256716137047:web:0c542560b2c7f32edb7912',
 };
 export const FIREBASE_SDK_VERSION = '10.12.2';
 

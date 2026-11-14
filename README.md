@@ -82,7 +82,9 @@ netlify.toml        Static-hosting config
 
 ---
 
-## 🔥 Enabling online multiplayer (Firebase)
+## 🔥 Online multiplayer (Firebase)
+
+> ✅ This project is connected to the Firebase Realtime Database `warung-kita-2cca7` (asia-southeast1). The steps below are only needed if you fork it onto your own Firebase project.
 
 While `FIREBASE_CONFIG` in `js/config.js` still holds the `YOUR_…` placeholders, multiplayer runs in **Demo Mode**: rooms are shared between tabs of the **same browser** through `BroadcastChannel`, which is handy for testing. To play across devices:
 

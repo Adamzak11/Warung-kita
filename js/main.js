@@ -463,8 +463,9 @@ async function joinRoomFlow() {
     S.mode = 'multi';
     S.mp = mp;
     attachSession();
-    // grab a free role
-    const taken = new Set(Object.entries(S.players).filter(([pid]) => pid !== mp.pid).map(([, p]) => p.role));
+    // grab a free role (read the room's players directly: online they arrive asynchronously)
+    const roster = (await mp.get('players')) || {};
+    const taken = new Set(Object.entries(roster).filter(([pid]) => pid !== mp.pid).map(([, p]) => p && p.role));
     const free = C.ROLE_ORDER.find((r) => !taken.has(r)) || 'chef';
     await mp.updateMe({ role: free });
     if (S.meta.phase !== 'playing') showRoom();
