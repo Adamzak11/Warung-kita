@@ -7,7 +7,7 @@
 //   • Billboard sprite characters for uploaded images
 //   • Lobby turntable preview
 // =====================================================================
-import { batikCanvas, BATIK_PATTERNS, BATIK_IDS, SKIN_TONES, HIJAB_COLORS } from './config.js';
+import { batikCanvas, BATIK_PATTERNS, BATIK_IDS, SKIN_TONES, HIJAB_COLORS } from './config.js?v=202611140133';
 
 const THREE = window.THREE;
 

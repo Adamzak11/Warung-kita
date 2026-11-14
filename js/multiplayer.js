@@ -15,7 +15,7 @@
 //     chat     {pushId: {pid, name, role, text, t}}
 //     gallery  [dataURL, ...]           (custom customer sprites)
 // =====================================================================
-import { FIREBASE_CONFIG, FIREBASE_SDK_VERSION, isFirebaseConfigured } from './config.js';
+import { FIREBASE_CONFIG, FIREBASE_SDK_VERSION, isFirebaseConfigured } from './config.js?v=202611140133';
 
 const split = (p) => String(p || '').split('/').filter(Boolean);
 const clone = (v) => (v === undefined ? undefined : JSON.parse(JSON.stringify(v)));

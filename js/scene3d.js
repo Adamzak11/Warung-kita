@@ -7,9 +7,9 @@
 // =====================================================================
 import {
   FOOD_INGREDIENTS, DRINK_INGREDIENTS, FOOD_MENU, DRINK_MENU, DUITNOW_PINK, rm,
-} from './config.js';
-import { buildCharacter } from './characters.js';
-import { buildCity } from './city.js';
+} from './config.js?v=202611140133';
+import { buildCharacter } from './characters.js?v=202611140133';
+import { buildCity } from './city.js?v=202611140133';
 
 const THREE = window.THREE;
 

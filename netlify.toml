@@ -7,12 +7,12 @@
   for = "/js/*"
   [headers.values]
     Content-Type = "text/javascript; charset=utf-8"
-    Cache-Control = "public, max-age=3600"
+    Cache-Control = "public, max-age=0, must-revalidate"
 
 [[headers]]
   for = "/css/*"
   [headers.values]
-    Cache-Control = "public, max-age=3600"
+    Cache-Control = "public, max-age=0, must-revalidate"
 
 [[headers]]
   for = "/*"

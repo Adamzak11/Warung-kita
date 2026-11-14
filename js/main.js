@@ -1,12 +1,12 @@
 // =====================================================================
 //  WARUNG KITA 3D: KOPITIAM RUSH — main game controller
 // =====================================================================
-import * as C from './config.js';
-import { audio } from './audio.js';
-import { processFullBodyImage, CharacterPreview, defaultAppearance, randomBatikAppearance, appearanceKey } from './characters.js';
-import { Scene3D } from './scene3d.js';
-import { Multiplayer, makeId } from './multiplayer.js';
-import { Calculator } from './calculator.js';
+import * as C from './config.js?v=202611140133';
+import { audio } from './audio.js?v=202611140133';
+import { processFullBodyImage, CharacterPreview, defaultAppearance, randomBatikAppearance, appearanceKey } from './characters.js?v=202611140133';
+import { Scene3D } from './scene3d.js?v=202611140133';
+import { Multiplayer, makeId } from './multiplayer.js?v=202611140133';
+import { Calculator } from './calculator.js?v=202611140133';
 
 // ---------------------------------------------------------------------
 //  Utilities
