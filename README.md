@@ -91,19 +91,36 @@ While `FIREBASE_CONFIG` in `js/config.js` still holds the `YOUR_…` placeholder
 1. Create a project at <https://console.firebase.google.com>, then add a **Web app**.
 2. Enable **Realtime Database** (any region).
 3. Paste your web config into `FIREBASE_CONFIG` in `js/config.js` (keep `databaseURL`).
-4. Set database rules. A minimal casual-play setup:
+4. Set database rules (Realtime Database → Rules → Publish):
 
 ```json
 {
   "rules": {
     "rooms": {
-      "$code": { ".read": true, ".write": true }
+      ".read": "query.orderByChild == 'meta/lastActive' && query.limitToFirst <= 20",
+      ".indexOn": ["meta/lastActive"],
+      "$code": {
+        ".read": true,
+        ".write": true,
+        ".validate": "$code.matches(/^[0-9]{4}$/)"
+      }
     }
   }
 }
 ```
 
-> ⚠️ These rules let anyone who knows a room code read and write that room. That is fine for casual play with friends. For a public deployment, add Firebase Auth (e.g. anonymous sign-in) and validation rules, and consider a scheduled cleanup of old `rooms/*` entries.
+Room codes must be 4 digits and nothing outside `/rooms` can be written. The `/rooms`-level read rule only allows the cleanup query below, so nobody can list every room.
+
+> ⚠️ Anyone who knows a room code can read and write that room — fine for casual play with friends. For a public deployment, add Firebase Auth (e.g. anonymous sign-in) and stricter validation.
+
+### 🧹 Automatic cleanup (no server needed)
+
+The Spark (free) plan has no Cloud Functions, so the players' browsers keep the database tidy:
+
+* **Last one out:** when the last player leaves a room, the whole room is deleted.
+* **Heartbeat + sweep:** every client stamps `meta/lastActive` (server time) every 2 minutes. Whenever someone creates a room, their browser deletes up to 20 rooms that have been silent for 30 minutes (e.g. everyone simply closed the tab). Tune `ROOM_STALE_MS` in `js/multiplayer.js`.
+* **Chat:** the host keeps only the latest 40 walkie-talkie messages.
+* Served/left orders are already removed during play, and daily stats reset each day.
 
 The Firebase v10 modular SDK (`firebase-app.js`, `firebase-database.js`) is loaded lazily from `gstatic.com`, and only once a real config is present.
 

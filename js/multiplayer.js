@@ -54,6 +54,12 @@ function overlaps(a, b) {
   return true;
 }
 
+// automatic cleanup (no server needed — the players' browsers do it)
+export const ROOM_STALE_MS = 30 * 60 * 1000;   // a room silent for 30 min is abandoned
+const HEARTBEAT_MS = 2 * 60 * 1000;            // every client marks its room alive every 2 min
+const CHAT_KEEP = 40;                          // the host keeps only the latest chat messages
+const SWEEP_BATCH = 20;
+
 let pushCounter = 0;
 export function makeId(prefix = '') {
   pushCounter = (pushCounter + 1) % 1296;
@@ -177,6 +183,9 @@ class LocalAdapter {
 
   onDisconnectRemove(path) { this.disconnectOps.push({ k: 'set', path, v: null }); }
   onDisconnectUpdate(path, v) { this.disconnectOps.push({ k: 'update', path, v }); }
+  serverTime() { return Date.now(); }
+  async staleRooms() { return []; } // demo rooms live only in open tabs
+  async removeRoom() { /* n/a */ }
 
   _runDisconnect() {
     for (const op of this.disconnectOps) {
@@ -253,6 +262,19 @@ class FirebaseAdapter {
 
   onDisconnectRemove(path) { this.m.onDisconnect(this.r(path)).remove(); }
   onDisconnectUpdate(path, v) { this.m.onDisconnect(this.r(path)).update(v); }
+  serverTime() { return this.m.serverTimestamp(); }
+
+  /** Codes of rooms whose last heartbeat is older than `cutoff` (or that have none) */
+  async staleRooms(cutoff, limit = SWEEP_BATCH) {
+    const m = this.m;
+    const q = m.query(m.ref(this.db, 'rooms'), m.orderByChild('meta/lastActive'), m.endAt(cutoff), m.limitToFirst(limit));
+    const snap = await m.get(q);
+    const out = [];
+    snap.forEach((child) => { out.push(child.key); });
+    return out;
+  }
+
+  removeRoom(code) { return this.m.remove(this.m.ref(this.db, `rooms/${code}`)); }
 
   destroy() {
     for (const off of this.unsubs) { try { off(); } catch (e) { /* ignore */ } }
@@ -313,12 +335,60 @@ export class Multiplayer {
     this.room = code;
     this.isHost = true;
     await this.adapter.set('', {
-      meta: { restaurantName, hostId: this.pid, phase: 'lobby', day: 1, clock: 0, createdAt: Date.now(), rushUntil: 0, totals: { sales: 0, tips: 0, served: 0, days: 0 } },
+      meta: { restaurantName, hostId: this.pid, phase: 'lobby', day: 1, clock: 0, createdAt: Date.now(), lastActive: this.adapter.serverTime(), rushUntil: 0, totals: { sales: 0, tips: 0, served: 0, days: 0 } },
       gallery: gallery.slice(0, 8),
       stats: {},
     });
     await this._join(player);
+    if (!solo) this.sweepStaleRooms(); // tidy up abandoned rooms in the background
     return code;
+  }
+
+  /**
+   * Delete rooms nobody has touched for ROOM_STALE_MS. Runs from the creator's
+   * browser; needs the read rule on /rooms described in the README. Never throws.
+   */
+  async sweepStaleRooms() {
+    const a = this.adapter;
+    if (!a || a.kind !== 'firebase') return 0;
+    try {
+      const cutoff = Date.now() - ROOM_STALE_MS;
+      const codes = (await a.staleRooms(cutoff)).filter((c) => c !== this.room);
+      await Promise.all(codes.map((c) => a.removeRoom(c)));
+      if (codes.length) console.info(`[mp] cleaned ${codes.length} abandoned room(s)`);
+      return codes.length;
+    } catch (e) {
+      console.info('[mp] room sweep skipped:', e && e.message);
+      return 0;
+    }
+  }
+
+  _startHeartbeat() {
+    this._stopHeartbeat();
+    if (this.solo) return;
+    const beat = async () => {
+      if (!this.adapter) return;
+      try {
+        await this.adapter.update('meta', { lastActive: this.adapter.serverTime() });
+        if (this.isHost) await this._trimChat();
+      } catch (e) { /* offline for a moment — next beat will retry */ }
+    };
+    beat();
+    this._hb = setInterval(beat, HEARTBEAT_MS);
+  }
+
+  _stopHeartbeat() {
+    if (this._hb) clearInterval(this._hb);
+    this._hb = null;
+  }
+
+  async _trimChat() {
+    const chat = (await this.adapter.get('chat')) || {};
+    const keys = Object.keys(chat).sort();
+    if (keys.length <= CHAT_KEEP) return;
+    const patch = {};
+    for (const k of keys.slice(0, keys.length - CHAT_KEEP)) patch[k] = null;
+    await this.adapter.update('chat', patch);
   }
 
   async joinRoom(code, player) {
@@ -360,6 +430,7 @@ export class Multiplayer {
       this.players = p || {};
       this._checkHost();
     });
+    this._startHeartbeat();
   }
 
   /** Host migration: if the host vanished, the earliest-joined remaining human takes over */
@@ -403,9 +474,13 @@ export class Multiplayer {
   onChat(cb) { return this.adapter.onChildAdded('chat', (k, v) => cb(v, k), 25); }
 
   leave() {
+    this._stopHeartbeat();
     try {
       if (this.adapter) {
-        this.adapter.remove(`players/${this.pid}`);
+        const others = Object.keys(this.players || {}).filter((pid) => pid !== this.pid);
+        // last player out: delete the whole room instead of leaving an empty shell behind
+        if (!this.solo && others.length === 0) this.adapter.remove('');
+        else this.adapter.remove(`players/${this.pid}`);
         this.adapter.destroy();
       }
     } catch (e) { /* ignore */ }
