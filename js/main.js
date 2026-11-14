@@ -300,8 +300,8 @@ function initLobby() {
   $('#in-room-code').addEventListener('keydown', (e) => { if (e.key === 'Enter') joinRoomFlow(); });
 
   $('#mp-status').innerHTML = Multiplayer.onlineAvailable
-    ? '🟢 <b>Online</b> — Firebase Realtime Database dikonfigurasi. Kongsi kod 4-digit dengan rakan.'
-    : '🟡 <b>Mod Demo Tempatan</b> — Firebase belum dikonfigurasi (<code>js/config.js</code>). Buka tab lain di pelayar ini untuk sertai bilik yang sama. Bot akan mengisi peranan kosong.';
+    ? '🟢 <b>Online</b> — Kongsi kod 4-digit dengan rakan.'
+    : '🟡 <b>Mod Demo</b> — Buka tab lain di pelayar ini untuk sertai bilik yang sama. Bot akan mengisi peranan kosong.';
 }
 
 function toastLobby(text) {
@@ -670,7 +670,7 @@ function renderRoom() {
   $('#room-restaurant').textContent = `🏪 ${S.meta.restaurantName || ''}`;
   $('#room-mode-note').innerHTML = S.mp.isDemo
     ? '🟡 Mod Demo Tempatan — buka tab baharu, pilih Multiplayer & masukkan kod ini untuk sertai.'
-    : '🟢 Online melalui Firebase Realtime Database.';
+    : '🟢 Online — kongsi kod bilik ini dengan rakan.';
   const mine = me();
   $$('#room-roles [data-role]').forEach((b) => {
     b.classList.toggle('active', mine && mine.role === b.dataset.role);
