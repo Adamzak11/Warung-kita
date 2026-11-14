@@ -1163,6 +1163,7 @@ body:not(.in-game) #chat-panel { bottom: 16px; top: 90px; }
 /*  Portrait lock overlay                                              */
 /* ------------------------------------------------------------------ */
 #rotate-overlay {
+  overflow-y: auto;
   display: none;
   position: fixed;
   inset: 0;
@@ -1178,6 +1179,21 @@ body:not(.in-game) #chat-panel { bottom: 16px; top: 90px; }
 }
 .rotate-card h2 { font-size: 24px; color: var(--gold-2); margin: 12px 0 8px; }
 .rotate-card p { font-size: 15px; line-height: 1.5; opacity: 0.9; }
+.desktop-tip {
+  margin: 18px auto 0;
+  max-width: 360px;
+  text-align: left;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.28);
+  border: 2px solid var(--gold);
+}
+.desktop-tip h3 { font-size: 16px; color: var(--gold-2); margin: 0 0 4px; }
+.desktop-tip p { font-size: 13px; margin: 0 0 8px; }
+.desktop-tip ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
+.desktop-tip li { font-size: 13px; line-height: 1.4; }
+.desktop-tip .br { display: inline-block; min-width: 66px; margin-right: 6px; padding: 1px 7px; border-radius: 99px; background: var(--cream); color: var(--ink); font-weight: 700; font-size: 11px; text-align: center; }
+.desktop-tip .tip-then { margin: 10px 0 0; font-weight: 600; }
 .rotate-phone { font-size: 72px; display: inline-block; animation: rotatePhone 2s ease-in-out infinite; }
 @media (orientation: portrait) and (max-width: 900px) {
   #rotate-overlay { display: grid; }
